@@ -1,13 +1,21 @@
 import time
 import random
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from constants import SCROLL_PAUSE_RANGE, PAUSE_FREQUENCY, SCROLL_AMOUNT, INERTIA_FACTOR, SCROLL_STEP_TIME, MAX_LOADING_WAIT
 
-def scroll(driver, pause_range=(2, 5), pause_frequency=0.001, scroll_amount=(0.4, 0.6), inertia_factor = 0.3):
+def scroll(driver, pause_range=SCROLL_PAUSE_RANGE, pause_frequency=PAUSE_FREQUENCY, scroll_amount=SCROLL_AMOUNT, inertia_factor = INERTIA_FACTOR):
     action = ActionChains(driver)
     current_position = 0
     end_of_page = False
     velocity = 0
     max_velocity = random.uniform(*scroll_amount)
+
+    # wait for a tweet to load (else scrolling will stop)
+    wait = WebDriverWait(driver, MAX_LOADING_WAIT)
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="tweet"]')))
 
     while not end_of_page:
         # simulate inertia-based scrolling
@@ -18,9 +26,9 @@ def scroll(driver, pause_range=(2, 5), pause_frequency=0.001, scroll_amount=(0.4
         if random.uniform(0, 1) < pause_frequency:
             print("Pausing")
             time.sleep(random.uniform(*pause_range))
+            read_tweet(driver)
             velocity = random.uniform(0, max_velocity * inertia_factor)
-        else: 
-            print("Scrolling")
+        
         # scroll
         current_position += velocity
         driver.execute_script(f"window.scrollTo(0, {current_position});")
@@ -36,5 +44,38 @@ def scroll(driver, pause_range=(2, 5), pause_frequency=0.001, scroll_amount=(0.4
 
         # check if end of page
         end_of_page = driver.execute_script("return (window.innerHeight + window.scrollY) >= document.body.scrollHeight")
-        time.sleep(random.uniform(0.00005, 0.00015))
+        time.sleep(random.uniform(*SCROLL_STEP_TIME))
+
+    print('scrolling ended')
+
+def read_tweet(driver):
+    print("read called")
+    tweets = driver.find_elements(By.CSS_SELECTOR, '[data-testid="tweet"]')
+
+    if tweets:
+
+        # Some tweets are loaded before they are visible. We want visible tweets only. 
+        visible_tweets = []
+        for tweet in tweets:
+           # use a script to check if the tweet is inside the viewport
+           # rect.top >=0 ensures the tweet doesn't start above viewport
+           # rect.bottom <=... ensures tweet doesn't end below the viewport (ends more than window height away from the top of the viewport)
+           is_visible = driver.execute_script(
+               """
+                const rect = arguments[0].getBoundingClientRect();
+                return rect.top >= 0 && rect.bottom <= window.innerHeight;
+                """,
+                tweet
+           )
+           if is_visible:
+               visible_tweets.append(tweet)
+        # select last visible tweet and read in the text. 
+        if visible_tweets:
+            last_tweet = visible_tweets[-1]
+            tweet_text = last_tweet.find_element(By.CSS_SELECTOR, '[data-testid="tweetText"]').text
+            print("Tweet:", tweet_text)
+        else:
+            print("No visible tweets")
+    else: 
+        print("no  tweets")
 

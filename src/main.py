@@ -5,8 +5,8 @@ from constants import URL, AUTH_COOKIE
 # Launch Chrome, go to URL, login
 driver = webdriver.Chrome()
 driver.get(URL)
-# driver.add_cookie(AUTH_COOKIE)
-# driver.refresh()
+driver.add_cookie(AUTH_COOKIE)
+driver.refresh()
 
 # scroll 
 scroll(driver)

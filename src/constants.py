@@ -1,6 +1,5 @@
 URL = "https://x.com"
 # URL = "https://www.google.com/search?q=dogs"
-AUTH_COOKIE = {"name": "auth_token", "value": "99c11c5cec133b84f242e1728b79f83e50720780", "domain": ".x.com"}
 
 # Navigation
 SCROLL_PAUSE_RANGE = (2, 5) # range of how long we'll pause while scrolling, seconds

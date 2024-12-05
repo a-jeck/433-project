@@ -26,7 +26,7 @@ def scroll(driver, pause_range=SCROLL_PAUSE_RANGE, pause_frequency=PAUSE_FREQUEN
         if random.uniform(0, 1) < pause_frequency:
             print("Pausing")
             time.sleep(random.uniform(*pause_range))
-            read_tweet(driver)
+            find_tweet(driver)
             velocity = random.uniform(0, max_velocity * inertia_factor)
         
         # scroll
@@ -48,7 +48,7 @@ def scroll(driver, pause_range=SCROLL_PAUSE_RANGE, pause_frequency=PAUSE_FREQUEN
 
     print('scrolling ended')
 
-def read_tweet(driver):
+def find_tweet(driver):
     print("read called")
     tweets = driver.find_elements(By.CSS_SELECTOR, '[data-testid="tweet"]')
 
@@ -73,9 +73,13 @@ def read_tweet(driver):
         if visible_tweets:
             last_tweet = visible_tweets[-1]
             tweet_text = last_tweet.find_element(By.CSS_SELECTOR, '[data-testid="tweetText"]').text
-            print("Tweet:", tweet_text)
+            tweet_id = last_tweet.find_element(By.CSS_SELECTOR, '[data-testid="tweetText"]').get_attribute("id")
+            return (tweet_text, tweet_id)
         else:
             print("No visible tweets")
     else: 
         print("no  tweets")
 
+
+def get_response(tweet):
+    NotImplemented

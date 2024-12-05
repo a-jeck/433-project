@@ -1,6 +1,7 @@
 from selenium import webdriver
 from navigation import scroll
-from constants import URL, AUTH_COOKIE
+from constants import URL
+from keys import AUTH_COOKIE
 
 # Launch Chrome, go to URL, login
 driver = webdriver.Chrome()

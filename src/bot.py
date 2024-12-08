@@ -1,4 +1,4 @@
-from navigation import scroll
+from navigation import scroll, downloadImage
 from responses import get_response
 from selenium import webdriver
 from constants import URL
@@ -16,10 +16,15 @@ class TwitterBot:
         self.current_position = 0
         self.end_of_page = False
         self.last_tweet = ("", "")
+        self.tweet = None
 
     def scroll(self):
         return(scroll(self))
     
     def readTweet(self):
         get_response(self.tweet)
+        return
+    
+    def download(self):
+        downloadImage(self.tweet)
         return

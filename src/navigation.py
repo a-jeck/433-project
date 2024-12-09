@@ -9,7 +9,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from constants import SCROLL_STEP, MAX_LOADING_WAIT, ACCELERATION, IMAGE, VIDEO, TEXT, TIMESTAMP_REGEX
+from constants import SCROLL_STEP, MAX_LOADING_WAIT, ACCELERATION, IMAGE, VIDEO, TEXT, TIMESTAMP_REGEX, LIKE, REPLY, RETWEET
 from responses import get_response
 from tweet import Tweet
 
@@ -125,24 +125,23 @@ def downloadImage(tweet):
         except IOError as e:
             print(f"Failed to save image: {e}")
 
-def findLikeButton(bot):
+def findButton(bot, button):
     # Find middle of page
     viewport_height = bot.driver.execute_script("return window.innerHeight;")
     viewport_middle_axis = viewport_height // 2
 
     # Find first like button below middle of page
-    like_buttons = bot.driver.find_elements(By.CSS_SELECTOR, '[data-testid="like"]')
-    for button in like_buttons:
-        heart_icon = button.find_element(By.CSS_SELECTOR, "svg")
+    buttons = bot.driver.find_elements(By.CSS_SELECTOR, f'[data-testid="{button}"]')
+    for b in buttons:
+        icon = b.find_element(By.CSS_SELECTOR, "svg")
         top = bot.driver.execute_script(
             """
             return(arguments[0].getBoundingClientRect().top);
-            """, heart_icon
+            """, b
         )
         if (top > viewport_middle_axis):
-            return heart_icon
+            return icon
     return -1
-
 
 def click(bot, target):
     x_offset = random.uniform(0.1, 0.9)
@@ -158,5 +157,14 @@ def randomMouseMovement(bot):
     bot.cursor.move_to([x_offset, y_offset], absolute_offset=True)
     return
 
+def randomClick(bot):
+    click_duration = random.uniform(0.04, 0.08)
+    bot.cursor.click(click_duration = click_duration)
+    return
+
+def naturalText(bot, text):
+    input_field = bot.driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetTextarea_0"][contenteditable="true"]')
+    input_field.send_keys("test")
+    # for char,index in text:
 
 

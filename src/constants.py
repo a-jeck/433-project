@@ -15,6 +15,10 @@ IMAGE = 1
 VIDEO = 2
 TIMESTAMP_REGEX = r'\b\d{1,2}:\d{2}\b'
 
+LIKE = "like"
+REPLY = "reply"
+RETWEET = "retweet"
+
 GEMINI_MODEL = "gemini-1.5-flash"
 GEMINI_TEXT_PROMPT = """
 You are an AI trained to assist in creating friendly Twitter responses about dogs and pets. Your task is to analyze a given tweet and decide whether a response from a dog lover would be appropriate and engaging. Follow these rules:

@@ -4,6 +4,7 @@ import re
 import requests
 from io import BytesIO
 from PIL import Image
+from humancursor import WebCursor
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -96,16 +97,17 @@ def scroll(bot):
     # Videos have an image preview
     if tweet_type == IMAGE:
         media_div = tweet_image[0].get_attribute("outerHTML")
-        image_search = re.search(r'https://pbs\.twimg\.com/[^\s"]+', media_div)
+        image_search = re.search(r'https://pbs\.twimg\.com/[^\s"]+jpg', media_div)
         if image_search:
             processed_tweet.link = image_search.group(0)
     if tweet_type == VIDEO:
         media_div = tweet_video[0].get_attribute("outerHTML")
-        image_search = re.search(r'https://pbs\.twimg\.com/[^\s"]+', media_div)
+        image_search = re.search(r'https://pbs\.twimg\.com/[^\s"]+jpg', media_div)
         if image_search:
             processed_tweet.link = image_search.group(0)
     bot.tweet = processed_tweet
     return(0)
+
 
 def downloadImage(tweet):
     if tweet.link:
@@ -122,3 +124,39 @@ def downloadImage(tweet):
             print(f"Failed to download image: {e}")
         except IOError as e:
             print(f"Failed to save image: {e}")
+
+def findLikeButton(bot):
+    # Find middle of page
+    viewport_height = bot.driver.execute_script("return window.innerHeight;")
+    viewport_middle_axis = viewport_height // 2
+
+    # Find first like button below middle of page
+    like_buttons = bot.driver.find_elements(By.CSS_SELECTOR, '[data-testid="like"]')
+    for button in like_buttons:
+        heart_icon = button.find_element(By.CSS_SELECTOR, "svg")
+        top = bot.driver.execute_script(
+            """
+            return(arguments[0].getBoundingClientRect().top);
+            """, heart_icon
+        )
+        if (top > viewport_middle_axis):
+            return heart_icon
+    return -1
+
+
+def click(bot, target):
+    x_offset = random.uniform(0.1, 0.9)
+    y_offset = random.uniform(0.1, 0.9)
+    click_duration = random.uniform(0.04, 0.08)
+    bot.cursor.click_on(target, relative_position=[x_offset, y_offset], click_duration = click_duration)
+    return
+
+def randomMouseMovement(bot):
+    x_offset = random.uniform(10, 100)
+    y_offset = random.uniform(10, 100)
+    bot.cursor.show_cursor()
+    bot.cursor.move_to([x_offset, y_offset], absolute_offset=True)
+    return
+
+
+

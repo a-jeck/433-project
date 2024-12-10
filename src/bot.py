@@ -7,7 +7,7 @@ from mouse_actions import  click, randomMouseMovement, randomClick
 from keyboard_actions import typeStr, submitField
 from responses import get_response
 
-from constants import URL, LIKE, RETWEET, REPLY
+from constants import URL, LIKE, RETWEET, REPLY, REPLY_TOGGLE_TYPING_PAUSE_RANGE, RETWEET_DOUBLECLICK_COOLDOWN_RANGE
 from config import AUTH_COOKIE
 
 class TwitterBot:
@@ -18,6 +18,7 @@ class TwitterBot:
         driver.add_cookie(AUTH_COOKIE)
         driver.refresh()
         cursor = WebCursor(driver)
+        # cursor.show_cursor()
 
         self.driver = driver
         self.cursor = cursor
@@ -45,7 +46,7 @@ class TwitterBot:
     def retweet(self):
         target = findButton(self, RETWEET)
         click(self, target)
-        time.sleep(random.uniform(0.2, 0.6))
+        time.sleep(random.uniform(RETWEET_DOUBLECLICK_COOLDOWN_RANGE))
         randomClick(self)
         randomMouseMovement(self)
         return
@@ -53,7 +54,9 @@ class TwitterBot:
     def reply(self, text):
         target = findButton(self, REPLY)
         click(self, target)
+        time.sleep(random.uniform(REPLY_TOGGLE_TYPING_PAUSE_RANGE))
         typeStr(self, text)
+        time.sleep(random.uniform(REPLY_TOGGLE_TYPING_PAUSE_RANGE))
         submitField(self)
         randomMouseMovement(self)
         return

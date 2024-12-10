@@ -3,10 +3,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
-def calculate_typing_time(base_wpm=70, variation=10):
-    current_wpm = base_wpm + random.uniform(-variation, variation)
-    chars_per_minute = current_wpm * 5 
-    return 1 / (chars_per_minute / 60)
+from constants import BASE_WPM, WPM_VARIATION, WPM_TO_CPM_RATIO, TYPO_PROBABILITY, REALIZE_TYPO_PAUSE_RANGE, FIX_TYPO_PAUSE_RANGE, SANITIZE_GEMINI_RESPONSE_REGEX, REMOVE_MULTI_SPACES_REGEX, TYPING_PAUSE_PROB, TYPING_PAUSE_RANGE
+
+def calculate_typing_time():
+    current_wpm = BASE_WPM + random.uniform(-WPM_VARIATION, WPM_VARIATION)
+    chars_per_minute = current_wpm * WPM_TO_CPM_RATIO 
+    seconds_per_min = 60
+    return 1 / (chars_per_minute / seconds_per_min)
 
 def generate_typo(char):
     if len(char) != 1:
@@ -22,7 +25,7 @@ def generate_typo(char):
         'b': 'vghn', 'n': 'bhj', 'm': 'njk'
     }
     
-    if random.random() < 0.2:
+    if random.random() < TYPO_PROBABILITY:
         if char.lower() in typo_map:
             # Select a random key near desired key
             typo_char = random.choice(typo_map[char.lower()])
@@ -35,9 +38,9 @@ def typeStr(bot, text):
 
     # Remove emojis and other unwanted characters
     # Keep alphanumeric, spaces, and common punctuation
-    cleaned_text = re.sub(r'[^\w\s.,!?\'\";:-]', '', text)
+    cleaned_text = re.sub(SANITIZE_GEMINI_RESPONSE_REGEX, '', text)
     # Remove leftover spaces from first cleaning
-    cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
+    cleaned_text = re.sub(REMOVE_MULTI_SPACES_REGEX, ' ', cleaned_text).strip()
 
     for char in cleaned_text:
         # Generate potential typo
@@ -46,9 +49,9 @@ def typeStr(bot, text):
         # If typo occurred, type the wrong character first then correct
         if is_typo:
             input_field.send_keys(typo_char)
-            time.sleep(random.uniform(0.2, 0.5))
+            time.sleep(random.uniform(REALIZE_TYPO_PAUSE_RANGE))
             input_field.send_keys('\b')
-            time.sleep(random.uniform(0.1, 0.2))
+            time.sleep(random.uniform(FIX_TYPO_PAUSE_RANGE))
         
         # Type the correct character
         input_field.send_keys(char)
@@ -58,8 +61,8 @@ def typeStr(bot, text):
         time.sleep(type_time)
         
         # Random pauses between characters
-        if random.random() < 0.1:
-            time.sleep(random.uniform(0.1, 0.3))
+        if random.random() < TYPING_PAUSE_PROB:
+            time.sleep(random.uniform(TYPING_PAUSE_RANGE))
 
 
 def submitField(bot):
@@ -71,5 +74,3 @@ def submitField(bot):
     actions.send_keys(Keys.ENTER)
     actions.key_up(Keys.CONTROL)
     actions.perform()
-
-    time.sleep(0.5)

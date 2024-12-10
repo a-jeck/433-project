@@ -1,12 +1,10 @@
-import time
-import random
-import re
-import requests
+import time, random, re, requests
 from io import BytesIO
 from PIL import Image
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
 from constants import SCROLL_STEP, MAX_LOADING_WAIT, ACCELERATION, IMAGE, VIDEO, TEXT, TIMESTAMP_REGEX
 from tweet import Tweet
 
@@ -140,7 +138,6 @@ def downloadImage(tweet):
 
             # Save the image to the specified path
             image.save('../assets/image.jpg')
-            print(f"Image successfully downloaded")
         except requests.exceptions.RequestException as e:
             print(f"Failed to download image: {e}")
         except IOError as e:

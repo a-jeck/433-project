@@ -1,9 +1,12 @@
-import random
-import time
-from navigation import scroll, downloadImage, naturalText, randomClick, findButton, click, randomMouseMovement
-from responses import get_response
+import random, time
 from selenium import webdriver
 from humancursor import WebCursor
+
+from navigation import scrollToNextTweet, downloadImage, findButton
+from mouse_actions import  click, randomMouseMovement, randomClick
+from keyboard_actions import typeStr, submitField
+from responses import get_response
+
 from constants import URL, LIKE, RETWEET, REPLY
 from config import AUTH_COOKIE
 
@@ -24,7 +27,7 @@ class TwitterBot:
         self.tweet = None
 
     def scroll(self):
-        return(scroll(self))
+        return(scrollToNextTweet(self))
     
     def readTweet(self, image):
         return get_response(self.tweet, image)
@@ -47,11 +50,11 @@ class TwitterBot:
         randomMouseMovement(self)
         return
     
-    def reply(self):
+    def reply(self, text):
         target = findButton(self, REPLY)
         click(self, target)
-        naturalText(self, "blah")
-        time.sleep(5)
+        typeStr(self, text)
+        submitField(self)
         randomMouseMovement(self)
         return
     

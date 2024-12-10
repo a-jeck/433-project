@@ -4,16 +4,13 @@ import re
 import requests
 from io import BytesIO
 from PIL import Image
-from humancursor import WebCursor
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from constants import SCROLL_STEP, MAX_LOADING_WAIT, ACCELERATION, IMAGE, VIDEO, TEXT, TIMESTAMP_REGEX, LIKE, REPLY, RETWEET
-from responses import get_response
+from constants import SCROLL_STEP, MAX_LOADING_WAIT, ACCELERATION, IMAGE, VIDEO, TEXT, TIMESTAMP_REGEX
 from tweet import Tweet
 
-def scroll(bot):
+def scrollToNextTweet(bot):
     # Wait for page load
     wait = WebDriverWait(bot.driver, MAX_LOADING_WAIT)
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="tweet"]')))
@@ -22,6 +19,34 @@ def scroll(bot):
     viewport_height = bot.driver.execute_script("return window.innerHeight;")
     viewport_middle_axis = viewport_height // 2
 
+    # Find the target tweet, middle_tweet_element, and its position
+    output = findNextTweet(bot, viewport_middle_axis)
+    if output == -1:
+        return -1
+    middle_tweet_element, middle_tweet_bounds = output
+    
+    # Calculate the distance needed to place the 'next tweet' in the middle of the page, with at least 25% of it above and below the middle line
+    middle_tweet_height = middle_tweet_bounds['bottom'] - middle_tweet_bounds['top']
+    scroll_distance_variance = middle_tweet_height // 4
+    min_scroll_distance = middle_tweet_bounds['top'] - viewport_middle_axis + scroll_distance_variance
+    max_scroll_distance = middle_tweet_bounds['bottom'] - viewport_middle_axis - scroll_distance_variance
+    scroll_distance = random.uniform(min_scroll_distance, max_scroll_distance)
+   
+    # Scroll page to new middle tweet
+    scroll(bot, scroll_distance)
+    
+    # Create tweet object from new tweet
+    new_tweet = createNewTweet(middle_tweet_element)
+    
+    if (new_tweet == -1):
+        return -1
+    else:
+        bot.tweet = new_tweet
+    
+    return(0)
+
+
+def findNextTweet(bot, viewport_middle_axis):
     # Find the tweet below the middle of the page (whichever the first tweet who's top of the their box is below middle)
     tweets = bot.driver.find_elements(By.CSS_SELECTOR, '[data-testid="tweet"]')
 
@@ -34,23 +59,19 @@ def scroll(bot):
             return {top: rect.top, bottom: rect.bottom};
             """, tweet
         )
-        if tweet_bounds['top'] > viewport_middle_axis:
+        if tweet_bounds and tweet_bounds['top'] > viewport_middle_axis:
             middle_tweet_element = tweet
             middle_tweet_bounds = tweet_bounds
             break
     
     if not middle_tweet_element or middle_tweet_element == bot.last_tweet:
-        return
+        return -1 
     else:
         bot.last_tweet = middle_tweet_element
     
-    # Calculate the distance needed to place the 'next tweet' in the middle of the page, with at least 25% of it above and below the middle line
-    middle_tweet_height = middle_tweet_bounds['bottom'] - middle_tweet_bounds['top']
-    scroll_distance_variance = middle_tweet_height // 4
-    min_scroll_distance = middle_tweet_bounds['top'] - viewport_middle_axis + scroll_distance_variance
-    max_scroll_distance = middle_tweet_bounds['bottom'] - viewport_middle_axis - scroll_distance_variance
-    scroll_distance = random.uniform(min_scroll_distance, max_scroll_distance)
-   
+    return middle_tweet_element, middle_tweet_bounds
+
+def scroll(bot, scroll_distance):
     # Move the next tweet to the middle of the page # execute the distance above
     distance_scrolled = 0
     velocity = 0
@@ -73,7 +94,8 @@ def scroll(bot):
 
         # Pause
         time.sleep(SCROLL_STEP)
-
+    
+def createNewTweet(middle_tweet_element):
     # Extract type from the tweet
     tweet_body = middle_tweet_element.find_elements(By.CSS_SELECTOR, '[data-testid="tweetText"]')
     tweet_image = middle_tweet_element.find_elements(By.CSS_SELECTOR, '[data-testid="tweetPhoto"]')
@@ -95,19 +117,18 @@ def scroll(bot):
             processed_tweet.seconds = video_length[1]
     
     # Videos have an image preview
-    if tweet_type == IMAGE:
-        media_div = tweet_image[0].get_attribute("outerHTML")
+    if tweet_type == IMAGE or tweet_type == VIDEO:
+        target_media = tweet_image[0] if tweet_type == IMAGE else tweet_video[0]
+        media_div = target_media.get_attribute("outerHTML") 
         image_search = re.search(r'https://pbs\.twimg\.com/[^\s"]+jpg', media_div)
         if image_search:
             processed_tweet.link = image_search.group(0)
-    if tweet_type == VIDEO:
-        media_div = tweet_video[0].get_attribute("outerHTML")
-        image_search = re.search(r'https://pbs\.twimg\.com/[^\s"]+jpg', media_div)
-        if image_search:
-            processed_tweet.link = image_search.group(0)
-    bot.tweet = processed_tweet
-    return(0)
-
+    # if tweet_type == VIDEO:
+    #     media_div = tweet_video[0].get_attribute("outerHTML")
+    #     image_search = re.search(r'https://pbs\.twimg\.com/[^\s"]+jpg', media_div)
+    #     if image_search:
+    #         processed_tweet.link = image_search.group(0)
+    return processed_tweet
 
 def downloadImage(tweet):
     if tweet.link:
@@ -143,28 +164,5 @@ def findButton(bot, button):
             return icon
     return -1
 
-def click(bot, target):
-    x_offset = random.uniform(0.1, 0.9)
-    y_offset = random.uniform(0.1, 0.9)
-    click_duration = random.uniform(0.04, 0.08)
-    bot.cursor.click_on(target, relative_position=[x_offset, y_offset], click_duration = click_duration)
-    return
-
-def randomMouseMovement(bot):
-    x_offset = random.uniform(10, 100)
-    y_offset = random.uniform(10, 100)
-    bot.cursor.show_cursor()
-    bot.cursor.move_to([x_offset, y_offset], absolute_offset=True)
-    return
-
-def randomClick(bot):
-    click_duration = random.uniform(0.04, 0.08)
-    bot.cursor.click(click_duration = click_duration)
-    return
-
-def naturalText(bot, text):
-    input_field = bot.driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetTextarea_0"][contenteditable="true"]')
-    input_field.send_keys("test")
-    # for char,index in text:
 
 

@@ -49,9 +49,9 @@ def typeStr(bot, text):
         # If typo occurred, type the wrong character first then correct
         if is_typo:
             input_field.send_keys(typo_char)
-            time.sleep(random.uniform(REALIZE_TYPO_PAUSE_RANGE))
+            time.sleep(random.uniform(*REALIZE_TYPO_PAUSE_RANGE))
             input_field.send_keys('\b')
-            time.sleep(random.uniform(FIX_TYPO_PAUSE_RANGE))
+            time.sleep(random.uniform(*FIX_TYPO_PAUSE_RANGE))
         
         # Type the correct character
         input_field.send_keys(char)
@@ -62,7 +62,7 @@ def typeStr(bot, text):
         
         # Random pauses between characters
         if random.random() < TYPING_PAUSE_PROB:
-            time.sleep(random.uniform(TYPING_PAUSE_RANGE))
+            time.sleep(random.uniform(*TYPING_PAUSE_RANGE))
 
 
 def submitField(bot):

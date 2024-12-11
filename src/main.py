@@ -7,7 +7,8 @@ from constants import VIDEO, IMAGE, TEXT, SESSION_LENGTH_RANGE, GLANCE_LENGTH_RA
 bot = TwitterBot()
 
 start_time = time.time()
-session_length = random.uniform(SESSION_LENGTH_RANGE)
+print(SESSION_LENGTH_RANGE)
+session_length = random.uniform(*SESSION_LENGTH_RANGE)
 end_time = start_time + session_length
 
 seconds_per_minute = 60
@@ -26,7 +27,7 @@ tweets_engaged = 0
 while(time.time() < end_time):
     if bot.scroll() == 0:
         # Glance at tweet, decide whether to engage
-        time.sleep(random.uniform(GLANCE_LENGTH_RANGE))
+        time.sleep(random.uniform(*GLANCE_LENGTH_RANGE))
         tweets_seen += 1
 
         # Chance of "reading" the tweet
@@ -52,7 +53,7 @@ while(time.time() < end_time):
                     quarter_video = 0.25 * seconds
                     time.sleep(random.uniform(quarter_video, seconds))
                 elif (bot.tweet.type == IMAGE):
-                    time.sleep(random.uniform(IMAGE_ENGAGEMENT_TIME_RANGE))
+                    time.sleep(random.uniform(*IMAGE_ENGAGEMENT_TIME_RANGE))
 
                 # Video or image tweets can also have text. Pause and read
                 if (bot.tweet.type == TEXT):

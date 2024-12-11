@@ -121,11 +121,6 @@ def createNewTweet(middle_tweet_element):
         image_search = re.search(r'https://pbs\.twimg\.com/[^\s"]+jpg', media_div)
         if image_search:
             processed_tweet.link = image_search.group(0)
-    # if tweet_type == VIDEO:
-    #     media_div = tweet_video[0].get_attribute("outerHTML")
-    #     image_search = re.search(r'https://pbs\.twimg\.com/[^\s"]+jpg', media_div)
-    #     if image_search:
-    #         processed_tweet.link = image_search.group(0)
     return processed_tweet
 
 def downloadImage(tweet):
